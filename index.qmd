@@ -2,6 +2,41 @@
 title: "Race and Income"
 ---
 
-This is a Quarto website.
+```{r}
+#| message: false
+#| warning: false
+#| echo: false
 
-To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
+library(tidyverse)
+library(plotly)
+
+# Load the full NYC tracts dataset
+nyc_tracts <- read.csv("https://raw.githubusercontent.com/PPBDS/primer.data/master/data-raw/nyc_tracts.csv")
+
+# Clean and extract borough
+df_clean <- nyc_tracts %>%
+  filter(!is.na(med_income)) %>%
+  mutate(
+    borough = str_extract(tract, "(?<=;\\s).*?(?=\\sCounty)")
+  )
+
+# Create ggplot
+p <- ggplot(df_clean, aes(x = med_income, y = race, color = med_income, text = paste("Tract:", tract))) +
+  geom_jitter(width = 0, height = 0.25, alpha = 0.6) +
+  scale_x_continuous(labels = scales::dollar) +
+  scale_color_viridis_c(option = "plasma") +
+  facet_wrap(~ borough, ncol = 1) +
+  labs(
+    title = "Race and Income Across Census Tracts in New York City",
+    x = "Median household income",
+    y = "Largest group in Census tract"
+  ) +
+  theme_minimal(base_size = 14)
+
+# Convert ggplot to interactive plotly plot
+ggplotly(p, tooltip = "text")
+
+```
+The chart illustrates the relationship between race and median household income across census tracts in New York City's five boroughs: Bronx, Kings (Brooklyn), New York (Manhattan), Queens, and Richmond (Staten Island). Each borough is represented by a scatter plot where the x-axis shows median household income ranging from $0 to $250,000, and the y-axis categorizes the largest racial group in each census tract as White, Hispanic, Black, or Asian. The color gradient, ranging from purple ($50,000) to yellow ($250,000), indicates the income levels, with denser clusters of dots showing where certain racial groups are more prevalent at specific income levels. For instance, in the Bronx, the majority of census tracts with the largest Hispanic and Black populations cluster at lower income levels, while White and Asian populations are more scattered.
+
+The data reveals distinct income patterns across the boroughs. In Manhattan, there is a broader spread of incomes, with some census tracts dominated by White and Asian populations reaching higher income levels (closer to $250,000), while Hispanic and Black-dominated tracts tend to cluster at lower to middle incomes. Queens and Richmond show a mix, with Asian and White populations often associated with higher incomes, whereas Hispanic and Black populations are more concentrated at lower income ranges. Brooklyn presents a similar trend, with a noticeable gradient where higher incomes are more associated with White and Asian groups. This visualization suggests socioeconomic disparities tied to racial composition across NYC's diverse boroughs as of June 26, 2025.
